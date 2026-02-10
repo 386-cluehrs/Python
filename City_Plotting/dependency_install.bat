@@ -1,1 +1,1 @@
-pip install osmnx
+pip install osmnx matplotlib

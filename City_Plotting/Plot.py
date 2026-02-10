@@ -1,20 +1,30 @@
 import osmnx as ox
 import matplotlib.pyplot as plt
-import geopandas as gpd # Moved this import to the top
+import geopandas as gpd
+
+def get_features(place_name, tags):
+    try:
+        features = ox.features_from_place(place_name, tags)
+    except ox._errors.InsufficientResponseError: # Catch the imported error directly
+        # Create an empty GeoDataFrame if no features are found to avoid further errors
+        features = gpd.GeoDataFrame()
+    return features
 
 # 1. Stadt definieren
-place_name = "Bremerhaven, Germany"
+place_name = "Berlin, Germany"
 
 # 2. Graph laden
 graph = ox.graph_from_place(place_name, network_type='drive')
 
-tags = {"railway": "tram"}
-
-try:
-    trams = ox.features_from_place(place_name, tags)
-except ox._errors.InsufficientResponseError: # Catch the imported error directly
-    # Create an empty GeoDataFrame if no trams are found to avoid further errors
-    trams = gpd.GeoDataFrame()
+#get Features
+tag_tram = {"railway": "tram"}
+trams = get_features(place_name, tag_tram)
+tag_train = {"railway": "rail"}
+trains = get_features(place_name, tag_train)
+tag_train_narrow = {"railway": "narrow_gauge"}
+trains_narrow = get_features(place_name, tag_train_narrow)
+tag_signals = {"railway": "signal"}
+signals = get_features(place_name, tag_signals)
 
 # 3. Logik für Dicke und Farbe definieren
 def get_edge_style(highway_type):
@@ -57,12 +67,28 @@ if not trams.empty:
     # Wir filtern nur Linienobjekte (LineString/MultiLineString)
     trams.plot(ax=ax, color='red', linewidth=1, alpha=1.0, zorder=3)
 
-# 6. Export als hochauflösendes Bild oder PDF
-# PDF ist ideal, wenn du das Bild später ohne Qualitätsverlust drucken willst.
-fig.savefig("stadt.png", dpi=600, bbox_inches='tight')
-#fig.savefig("stadt_design.pdf", bbox_inches='tight')
 
-#from google.colab import files
-#files.download("stadt1.png")
+#adding Trains
+if not trains.empty:
+    # Wir filtern nur Linienobjekte (LineString/MultiLineString)
+    trains.plot(ax=ax, color='blue', linewidth=1, alpha=1.0, zorder=5)
+
+#adding Trains narrow Gauge
+if not trains_narrow.empty:
+    # Wir filtern nur Linienobjekte (LineString/MultiLineString)
+    trains_narrow.plot(ax=ax, color='cyan', linewidth=1, alpha=1.0, zorder=4)
+
+#save without signals
+fig.savefig("stadt.png", dpi=600, bbox_inches='tight')
+
+
+
+#adding Signals
+if not signals.empty:
+    # Wir filtern nur Linienobjekte (LineString/MultiLineString)
+    # Kleine Markergröße für Signale setzen
+    signals.plot(ax=ax, color='green', markersize=4, alpha=1.0, zorder=6)
+# save with signals
+fig.savefig("stadt_with_signals.png", dpi=600, bbox_inches='tight')
 
 plt.show()
